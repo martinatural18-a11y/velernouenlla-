@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#ffffff">
+<title>Ruta Velera Jonic</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#eef0ec;display:flex;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+#map{position:absolute;inset:0;height:100%;width:100%;z-index:1;background:#eef2f7}
+#sb{width:322px;min-width:322px;height:100vh;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden;z-index:1000;box-shadow:2px 0 16px rgba(0,0,0,.07);position:relative}
+#sbh{padding:18px 18px 13px;border-bottom:1px solid #f0f0f0}
+.tt{font-size:15px;font-weight:700;color:#111827}.su{font-size:11px;color:#9ca3af;margin-top:3px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:11px 13px;border-bottom:1px solid #f0f0f0}
+.st{background:#f9fafb;border-radius:8px;padding:7px 10px}.st .l{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px}.st .v{font-size:17px;font-weight:700;margin-top:1px}
+#days{flex:1;overflow-y:auto;padding:9px;-webkit-overflow-scrolling:touch}#days::-webkit-scrollbar{width:3px}#days::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:4px}
+.day{border-radius:11px;border:1.5px solid #f0f0f0;margin-bottom:7px;background:#fff;overflow:hidden;transition:border-color .12s}
+.day.active{border-color:var(--dc)}
+.dh{padding:12px 13px;cursor:pointer;display:flex;align-items:center;gap:9px}
+.dh .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}.dh .nm{font-size:13px;font-weight:600;color:#111827}.dh .dt{font-size:11px;color:#9ca3af;margin-left:auto}
+.db{padding:0 13px 11px;display:none}.day.active .db{display:block}
+.dm{display:flex;gap:6px;margin:2px 0 9px}.mb{font-size:10px;padding:2px 8px;border-radius:20px;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb}
+.stop{display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:12px;color:#374151;line-height:1.4}.stop .ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}.stop .sn{font-weight:500}.stop .sd{color:#9ca3af;font-size:11px}
+.dn{margin-top:8px;padding-top:8px;border-top:1px solid #f3f4f6;font-size:11.5px;color:#6b7280;line-height:1.6}
+#ly{padding:9px 11px;border-top:1px solid #f0f0f0;display:flex;gap:5px}
+.lb{flex:1;padding:8px 3px;font-size:11px;border-radius:7px;background:#f9fafb;border:1px solid #e5e7eb;color:#6b7280;cursor:pointer}.lb.active{background:#eff6ff;border-color:#93c5fd;color:#2563eb;font-weight:600}
+.leaflet-popup-content-wrapper{background:#fff!important;border:1px solid #e5e7eb!important;border-radius:12px!important}.leaflet-popup-tip{background:#fff!important}.leaflet-popup-content{margin:11px 13px!important}
+.pt{font-size:13px;font-weight:700;margin-bottom:2px}.pi{font-size:11px;color:#6b7280;line-height:1.5}
+#leg{position:absolute;bottom:22px;right:14px;z-index:800;background:rgba(255,255,255,.97);border:1px solid #e5e7eb;border-radius:12px;padding:10px 13px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.lr{display:flex;align-items:center;gap:7px;font-size:11px;color:#6b7280;margin-bottom:4px}.lr:last-child{margin-bottom:0}.lr .e{font-size:14px;width:18px;text-align:center}
+#grab{display:none}
+@media (max-width:760px){
+ body{flex-direction:column}
+ #leg{bottom:auto;top:calc(env(safe-area-inset-top) + 10px);right:10px;padding:8px 10px;transform:scale(.9);transform-origin:top right}
+ #sb{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;min-width:0;height:auto;max-height:82vh;border-right:none;border-top:1px solid #e5e7eb;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.16);z-index:1500;transform:translateY(calc(100% - 136px));transition:transform .3s cubic-bezier(.4,0,.2,1);padding-bottom:env(safe-area-inset-bottom)}
+ #sb.open{transform:translateY(0)}
+ #grab{display:block;width:100%;padding:9px 0 4px;flex-shrink:0}#grab .bar{width:38px;height:4px;border-radius:3px;background:#d1d5db;margin:0 auto}
+ #sbh{padding:2px 16px 12px;cursor:pointer}
+ .tt{font-size:16px}.su{font-size:12px}
+ #days{max-height:48vh;padding:9px 11px}
+ .dh{padding:14px 13px}.dh .nm{font-size:14px}
+ .lb{padding:12px 3px;font-size:12px}
+ .stop{padding:7px 0;font-size:13px}.stop .sd{font-size:12px}.dn{font-size:12.5px}.mb{font-size:11px;padding:3px 9px}
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="sb">
+ <div id="grab"><div class="bar"></div></div>
+ <div id="sbh"><div class="tt">⛵ Ruta Jònic · 1-7 Agost</div><div class="su">Sun Odyssey 50 · Sami · 7 nusos · toca per veure els dies</div></div>
+ <div class="stats">
+ <div class="st"><div class="l">Milles totals</div><div class="v" id="tnm" style="color:#2563eb">—</div></div>
+ <div class="st"><div class="l">Temps total</div><div class="v" id="th" style="color:#16a34a">—</div></div>
+ <div class="st"><div class="l">Nits</div><div class="v" style="color:#7c3aed">6+1</div></div>
+ <div class="st"><div class="l">Velocitat</div><div class="v" style="color:#d97706">7 kn</div></div>
+ </div>
+ <div id="days"></div>
+ <div id="ly">
+ <button class="lb active" id="lb-sat" onclick="setL('sat')">🛰 Satèl·lit</button>
+ <button class="lb" id="lb-light" onclick="setL('light')">☀️ Clar</button>
+ <button class="lb" id="lb-naut" onclick="setL('naut')">⚓ Nàutic</button>
+ </div>
+</div>
+<div id="leg">
+ <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:.5px;margin-bottom:7px">LLEGENDA</div>
+ <div class="lr"><span class="e">🌙</span><span>Dormir</span></div>
+ <div class="lr"><span class="e">🍴</span><span>Dinar</span></div>
+ <div class="lr"><span class="e">🏊</span><span>Cala/bany</span></div>
+ <div class="lr"><span class="e">⚓</span><span>Base Sami</span></div>
+</div>
+<script>
+const DATA = {"routes": {"1": {"path": [[38.253, 20.647], [38.256, 20.647], [38.266, 20.657], [38.28, 20.657], [38.281, 20.658], [38.312, 20.658], [38.313, 20.659], [38.338, 20.659], [38.339, 20.66], [38.343, 20.66], [38.353, 20.65], [38.367, 20.65], [38.368, 20.649], [38.399, 20.649], [38.4, 20.648], [38.404, 20.648], [38.405, 20.647], [38.406, 20.647], [38.407, 20.646], [38.408, 20.646], [38.409, 20.645], [38.411, 20.645], [38.412, 20.644], [38.414, 20.644], [38.423, 20.635], [38.435, 20.635], [38.443, 20.627], [38.445, 20.627], [38.446, 20.626], [38.448, 20.626], [38.45, 20.624], [38.451, 20.624], [38.455, 20.62], [38.456, 20.62], [38.457, 20.619], [38.458, 20.619], [38.462, 20.615], [38.463, 20.615], [38.464, 20.614], [38.465, 20.614], [38.466, 20.613], [38.474, 20.613], [38.475, 20.614], [38.476, 20.614], [38.48, 20.618], [38.48, 20.622], [38.481, 20.623], [38.481, 20.625], [38.504, 20.648], [38.504, 20.649], [38.503, 20.65], [38.503, 20.658], [38.499, 20.662], [38.499, 20.664], [38.498, 20.665], [38.498, 20.666], [38.494, 20.67], [38.494, 20.675], [38.492, 20.677], [38.491, 20.677], [38.49, 20.678], [38.489, 20.678], [38.488, 20.679], [38.487, 20.679], [38.484, 20.676], [38.483, 20.676], [38.482, 20.675], [38.481, 20.675], [38.48, 20.674], [38.467, 20.674], [38.465, 20.672], [38.465, 20.67], [38.466, 20.669], [38.466, 20.668]], "nm": 20.5}, "2": {"path": [[38.466, 20.668], [38.466, 20.669], [38.465, 20.67], [38.465, 20.672], [38.474, 20.681], [38.488, 20.681], [38.489, 20.682], [38.503, 20.682], [38.504, 20.683], [38.505, 20.683], [38.506, 20.684], [38.507, 20.684], [38.508, 20.685], [38.509, 20.685], [38.51, 20.686], [38.512, 20.686], [38.513, 20.687], [38.514, 20.687], [38.515, 20.688], [38.516, 20.688], [38.517, 20.689], [38.518, 20.689], [38.519, 20.69], [38.52, 20.69], [38.521, 20.691], [38.523, 20.691], [38.524, 20.692], [38.525, 20.692], [38.526, 20.693], [38.527, 20.693], [38.528, 20.694], [38.529, 20.694], [38.53, 20.695], [38.531, 20.695], [38.532, 20.696], [38.534, 20.696], [38.535, 20.697], [38.536, 20.697], [38.537, 20.698], [38.538, 20.698], [38.539, 20.699], [38.54, 20.699], [38.541, 20.7], [38.542, 20.7], [38.543, 20.701], [38.544, 20.701], [38.545, 20.7], [38.558, 20.7], [38.559, 20.701], [38.562, 20.701], [38.564, 20.703], [38.565, 20.703], [38.566, 20.704], [38.567, 20.704], [38.586, 20.723], [38.587, 20.723], [38.588, 20.724], [38.589, 20.724], [38.59, 20.725], [38.591, 20.725], [38.592, 20.726], [38.593, 20.726], [38.594, 20.727], [38.596, 20.727], [38.597, 20.728], [38.598, 20.728], [38.599, 20.729], [38.6, 20.729], [38.601, 20.73], [38.602, 20.73], [38.603, 20.731], [38.604, 20.731], [38.605, 20.732], [38.607, 20.732], [38.608, 20.733], [38.609, 20.733], [38.61, 20.734], [38.611, 20.734], [38.612, 20.735], [38.613, 20.735], [38.614, 20.736], [38.615, 20.736], [38.616, 20.737], [38.618, 20.737], [38.619, 20.738], [38.62, 20.738], [38.621, 20.739], [38.622, 20.739], [38.623, 20.74], [38.624, 20.74], [38.625, 20.741], [38.626, 20.741], [38.627, 20.742], [38.628, 20.742], [38.608, 20.762], [38.608, 20.763], [38.607, 20.764], [38.607, 20.765], [38.606, 20.766], [38.606, 20.767], [38.605, 20.768], [38.605, 20.77], [38.604, 20.771], [38.604, 20.772], [38.603, 20.773], [38.603, 20.774], [38.602, 20.775], [38.602, 20.776], [38.601, 20.777], [38.601, 20.778], [38.6, 20.779], [38.6, 20.783], [38.59, 20.793], [38.59, 20.801], [38.589, 20.802], [38.589, 20.804], [38.586, 20.807], [38.586, 20.862], [38.577, 20.871], [38.577, 20.878], [38.579, 20.88], [38.579, 20.881], [38.585, 20.887], [38.585, 20.888], [38.586, 20.889], [38.586, 20.894], [38.59, 20.898], [38.59, 20.899], [38.591, 20.9], [38.591, 20.901], [38.592, 20.902], [38.592, 20.903]], "nm": 20.7}, "3": {"path": [[38.592, 20.903], [38.586, 20.903], [38.579, 20.896], [38.564, 20.896], [38.563, 20.895], [38.552, 20.895], [38.551, 20.894], [38.543, 20.894], [38.54, 20.897], [38.54, 20.898], [38.54, 20.899], [38.54, 20.9], [38.54, 20.901], [38.54, 20.902], [38.54, 20.903], [38.54, 20.904], [38.54, 20.905], [38.54, 20.906], [38.54, 20.907], [38.541, 20.908], [38.542, 20.908], [38.543, 20.908], [38.544, 20.908], [38.545, 20.908], [38.546, 20.908], [38.547, 20.908], [38.548, 20.908], [38.549, 20.908], [38.55, 20.908], [38.551, 20.908], [38.552, 20.908], [38.553, 20.908], [38.554, 20.908], [38.555, 20.908], [38.556, 20.908], [38.557, 20.909], [38.558, 20.909], [38.559, 20.91], [38.56, 20.91], [38.559, 20.909], [38.558, 20.909], [38.557, 20.908], [38.556, 20.908], [38.555, 20.908], [38.554, 20.908], [38.553, 20.908], [38.552, 20.908], [38.551, 20.908], [38.55, 20.908], [38.549, 20.908], [38.548, 20.908], [38.547, 20.908], [38.546, 20.908], [38.545, 20.908], [38.544, 20.908], [38.543, 20.908], [38.542, 20.908], [38.541, 20.908], [38.54, 20.907], [38.54, 20.906], [38.54, 20.905], [38.54, 20.904], [38.54, 20.903], [38.54, 20.902], [38.54, 20.901], [38.54, 20.9], [38.54, 20.899], [38.54, 20.898], [38.54, 20.897], [38.541, 20.896], [38.541, 20.882], [38.542, 20.881], [38.542, 20.88], [38.543, 20.879], [38.543, 20.878], [38.544, 20.877], [38.544, 20.875], [38.545, 20.874], [38.545, 20.873], [38.546, 20.872], [38.546, 20.871], [38.547, 20.87], [38.547, 20.869], [38.548, 20.868], [38.548, 20.867], [38.549, 20.866], [38.549, 20.864], [38.55, 20.863], [38.55, 20.862], [38.551, 20.861], [38.551, 20.86], [38.552, 20.859], [38.552, 20.858], [38.553, 20.857], [38.553, 20.856], [38.554, 20.855], [38.554, 20.853], [38.555, 20.852], [38.555, 20.851], [38.556, 20.85], [38.556, 20.849], [38.557, 20.848], [38.557, 20.847], [38.558, 20.846], [38.558, 20.845], [38.559, 20.844], [38.559, 20.842], [38.56, 20.841], [38.56, 20.84], [38.561, 20.839], [38.561, 20.838], [38.562, 20.837], [38.562, 20.836], [38.563, 20.835], [38.563, 20.834], [38.564, 20.833], [38.564, 20.831], [38.565, 20.83], [38.565, 20.829], [38.566, 20.828], [38.566, 20.827], [38.567, 20.826], [38.567, 20.825], [38.568, 20.824], [38.568, 20.813], [38.577, 20.804], [38.577, 20.803], [38.578, 20.802], [38.578, 20.801], [38.579, 20.8], [38.579, 20.799], [38.579, 20.8], [38.578, 20.801], [38.578, 20.802], [38.578, 20.803], [38.579, 20.804], [38.579, 20.808], [38.58, 20.809], [38.581, 20.809], [38.584, 20.812], [38.587, 20.812], [38.588, 20.813], [38.633, 20.813], [38.634, 20.812], [38.636, 20.812], [38.637, 20.811], [38.638, 20.811], [38.639, 20.81], [38.64, 20.81], [38.641, 20.809], [38.642, 20.809], [38.643, 20.808], [38.644, 20.808], [38.645, 20.807], [38.647, 20.807], [38.648, 20.806], [38.653, 20.806], [38.657, 20.802]], "nm": 17.9}, "4": {"path": [[38.657, 20.802], [38.657, 20.805], [38.658, 20.806], [38.658, 20.807], [38.67, 20.819], [38.67, 20.82], [38.671, 20.821], [38.671, 20.822], [38.672, 20.823], [38.672, 20.824], [38.673, 20.825], [38.673, 20.826], [38.674, 20.827], [38.674, 20.828], [38.675, 20.829], [38.675, 20.833], [38.665, 20.843], [38.665, 20.857], [38.664, 20.858], [38.664, 20.889], [38.663, 20.89], [38.663, 20.913], [38.662, 20.914], [38.662, 20.915], [38.661, 20.916], [38.661, 20.917], [38.66, 20.918], [38.66, 20.92], [38.659, 20.921], [38.659, 20.922], [38.658, 20.923], [38.658, 20.924], [38.657, 20.925], [38.657, 20.926], [38.656, 20.927], [38.656, 20.928], [38.655, 20.929], [38.655, 20.93], [38.654, 20.931], [38.654, 20.956], [38.653, 20.957], [38.653, 20.959], [38.652, 20.96], [38.652, 20.961], [38.651, 20.962], [38.646, 20.962], [38.645, 20.963], [38.643, 20.963], [38.64, 20.96], [38.639, 20.96], [38.634, 20.955], [38.633, 20.955], [38.625, 20.947], [38.625, 20.946], [38.624, 20.945], [38.624, 20.944], [38.623, 20.943], [38.623, 20.941], [38.622, 20.94], [38.622, 20.939], [38.621, 20.938], [38.621, 20.937], [38.62, 20.936], [38.62, 20.935], [38.619, 20.934], [38.619, 20.933], [38.618, 20.932], [38.618, 20.931]], "nm": 11.5}, "5": {"path": [[38.618, 20.931], [38.617, 20.93], [38.616, 20.93], [38.614, 20.928], [38.614, 20.926], [38.607, 20.919], [38.607, 20.909], [38.579, 20.881], [38.579, 20.88], [38.577, 20.878], [38.577, 20.871], [38.593, 20.855], [38.593, 20.828], [38.62, 20.801], [38.62, 20.8], [38.617, 20.8], [38.607, 20.81], [38.593, 20.81], [38.592, 20.811], [38.591, 20.811], [38.589, 20.813], [38.588, 20.813], [38.587, 20.812], [38.587, 20.802], [38.588, 20.801], [38.588, 20.789], [38.587, 20.788], [38.587, 20.725], [38.568, 20.706], [38.568, 20.705], [38.534, 20.671], [38.534, 20.67], [38.533, 20.669], [38.533, 20.668], [38.532, 20.667], [38.532, 20.666], [38.531, 20.665], [38.531, 20.664], [38.53, 20.663], [38.53, 20.661], [38.529, 20.66], [38.529, 20.659], [38.528, 20.658], [38.528, 20.657], [38.527, 20.656], [38.527, 20.655], [38.526, 20.654], [38.526, 20.653], [38.525, 20.652], [38.525, 20.65], [38.524, 20.649], [38.524, 20.648], [38.523, 20.647], [38.523, 20.646], [38.522, 20.645], [38.522, 20.644], [38.521, 20.643], [38.521, 20.642], [38.52, 20.641], [38.52, 20.64], [38.482, 20.602], [38.482, 20.601], [38.481, 20.6], [38.481, 20.599], [38.48, 20.598], [38.48, 20.596], [38.479, 20.595], [38.479, 20.594], [38.478, 20.593], [38.478, 20.592], [38.477, 20.591], [38.477, 20.59], [38.476, 20.589], [38.476, 20.588], [38.475, 20.587], [38.475, 20.585], [38.474, 20.584], [38.474, 20.583], [38.473, 20.582], [38.473, 20.581], [38.472, 20.58], [38.472, 20.579], [38.471, 20.578], [38.471, 20.577], [38.47, 20.576], [38.47, 20.575], [38.472, 20.575], [38.473, 20.574], [38.473, 20.567], [38.477, 20.563], [38.477, 20.561], [38.476, 20.56], [38.476, 20.558], [38.475, 20.557], [38.475, 20.547], [38.474, 20.546], [38.474, 20.54], [38.473, 20.539], [38.473, 20.538], [38.471, 20.536], [38.445, 20.536], [38.442, 20.533], [38.412, 20.533], [38.411, 20.534], [38.41, 20.534], [38.409, 20.535], [38.408, 20.535], [38.407, 20.536], [38.406, 20.536], [38.404, 20.538], [38.403, 20.538], [38.402, 20.539], [38.401, 20.539], [38.4, 20.54], [38.399, 20.54], [38.398, 20.541], [38.397, 20.541], [38.396, 20.542], [38.394, 20.542], [38.393, 20.543], [38.392, 20.543], [38.391, 20.544], [38.39, 20.544], [38.389, 20.545], [38.388, 20.545], [38.387, 20.546], [38.386, 20.546], [38.385, 20.547], [38.384, 20.547]], "nm": 33.2}, "6": {"path": [[38.384, 20.547], [38.387, 20.547], [38.397, 20.537], [38.411, 20.537], [38.412, 20.536], [38.429, 20.536], [38.432, 20.533], [38.442, 20.533], [38.445, 20.536], [38.471, 20.536], [38.473, 20.538], [38.473, 20.539], [38.474, 20.54], [38.474, 20.546], [38.475, 20.547], [38.475, 20.557], [38.476, 20.558], [38.476, 20.56], [38.477, 20.561], [38.477, 20.568], [38.473, 20.572], [38.473, 20.574], [38.469, 20.578], [38.469, 20.579], [38.464, 20.584], [38.46, 20.584], [38.459, 20.583], [38.459, 20.582], [38.459, 20.581], [38.46, 20.58], [38.461, 20.579], [38.461, 20.578], [38.461, 20.579], [38.46, 20.58], [38.459, 20.581], [38.459, 20.582], [38.459, 20.583], [38.46, 20.584], [38.462, 20.586], [38.465, 20.589], [38.487, 20.611], [38.489, 20.613], [38.489, 20.614], [38.49, 20.615], [38.49, 20.617], [38.491, 20.618], [38.491, 20.619], [38.492, 20.62], [38.492, 20.621], [38.493, 20.622], [38.493, 20.623], [38.494, 20.624], [38.494, 20.625], [38.495, 20.626], [38.495, 20.628], [38.496, 20.629], [38.496, 20.63], [38.497, 20.631], [38.497, 20.632], [38.498, 20.633], [38.498, 20.634], [38.499, 20.635], [38.499, 20.636], [38.5, 20.637], [38.5, 20.639], [38.501, 20.64], [38.501, 20.641], [38.502, 20.642], [38.502, 20.643], [38.503, 20.644], [38.503, 20.645], [38.504, 20.646], [38.504, 20.647], [38.505, 20.648], [38.505, 20.65], [38.506, 20.651], [38.506, 20.652], [38.507, 20.653], [38.507, 20.654], [38.508, 20.655], [38.508, 20.656], [38.509, 20.657], [38.509, 20.658], [38.51, 20.659], [38.51, 20.66], [38.434, 20.736], [38.434, 20.737], [38.433, 20.738], [38.433, 20.739], [38.432, 20.74], [38.432, 20.741], [38.431, 20.742], [38.431, 20.743], [38.43, 20.744], [38.43, 20.745], [38.427, 20.745], [38.417, 20.755], [38.403, 20.755], [38.402, 20.756], [38.371, 20.756], [38.37, 20.757], [38.365, 20.757], [38.364, 20.756], [38.363, 20.755], [38.362, 20.754], [38.361, 20.753], [38.36, 20.752], [38.359, 20.751], [38.358, 20.75], [38.352, 20.75], [38.347, 20.745], [38.346, 20.745], [38.344, 20.743], [38.343, 20.743], [38.342, 20.743], [38.34, 20.741], [38.34, 20.74], [38.341, 20.741], [38.341, 20.742], [38.342, 20.743], [38.343, 20.743], [38.344, 20.743], [38.345, 20.744], [38.346, 20.745], [38.347, 20.746], [38.352, 20.751], [38.359, 20.751], [38.36, 20.752], [38.361, 20.753], [38.362, 20.754], [38.365, 20.757], [38.374, 20.748], [38.378, 20.748], [38.379, 20.747], [38.379, 20.746], [38.381, 20.744], [38.381, 20.743], [38.388, 20.736], [38.388, 20.729], [38.39, 20.727], [38.39, 20.726], [38.391, 20.725], [38.391, 20.722], [38.392, 20.721], [38.392, 20.718], [38.393, 20.717], [38.393, 20.715], [38.388, 20.71], [38.388, 20.703], [38.387, 20.702], [38.385, 20.702], [38.384, 20.701], [38.383, 20.701], [38.382, 20.7], [38.381, 20.701], [38.38, 20.701], [38.374, 20.707], [38.374, 20.708], [38.372, 20.71], [38.372, 20.712], [38.371, 20.713], [38.371, 20.714], [38.37, 20.715], [38.37, 20.716]], "nm": 33.5}, "7": {"path": [[38.37, 20.716], [38.367, 20.719], [38.367, 20.72], [38.367, 20.719], [38.367, 20.716], [38.368, 20.715], [38.368, 20.713], [38.38, 20.701], [38.381, 20.701], [38.382, 20.7], [38.383, 20.701], [38.384, 20.701], [38.385, 20.702], [38.387, 20.702], [38.388, 20.703], [38.388, 20.71], [38.393, 20.715], [38.393, 20.717], [38.392, 20.718], [38.392, 20.721], [38.391, 20.722], [38.391, 20.725], [38.39, 20.726], [38.39, 20.727], [38.388, 20.729], [38.388, 20.736], [38.381, 20.743], [38.381, 20.744], [38.379, 20.746], [38.379, 20.747], [38.378, 20.748], [38.374, 20.748], [38.365, 20.757], [38.358, 20.75], [38.352, 20.75], [38.347, 20.745], [38.346, 20.745], [38.344, 20.743], [38.342, 20.743], [38.34, 20.741], [38.34, 20.74], [38.34, 20.741], [38.339, 20.742], [38.339, 20.744], [38.327, 20.756], [38.327, 20.76], [38.32, 20.767], [38.319, 20.767], [38.317, 20.765], [38.317, 20.76], [38.312, 20.755], [38.312, 20.75], [38.31, 20.748], [38.31, 20.746], [38.307, 20.743], [38.307, 20.737], [38.306, 20.736], [38.306, 20.733], [38.305, 20.732], [38.305, 20.731], [38.303, 20.729], [38.303, 20.726], [38.3, 20.723], [38.3, 20.7], [38.283, 20.683], [38.283, 20.676], [38.281, 20.674], [38.281, 20.673], [38.279, 20.671], [38.279, 20.669], [38.278, 20.668], [38.278, 20.667], [38.262, 20.651], [38.261, 20.651], [38.26, 20.65], [38.259, 20.65], [38.258, 20.649], [38.257, 20.649], [38.256, 20.648], [38.255, 20.648], [38.254, 20.647], [38.253, 20.647]], "nm": 17.2}}, "stops": [{"n": "Sami", "d": "Base de lloguer \u00b7 sortida dissabte 14h", "lat": 38.2527, "lng": 20.6476, "kind": "base", "day": 0}, {"n": "Marmakas Beach", "d": "Nord d'\u00cdtaca, vora Frikes", "lat": 38.468, "lng": 20.666, "kind": "sleep", "day": 1}, {"n": "Illa Arkoudi", "d": "Banyada de pas", "lat": 38.55, "lng": 20.707, "kind": "swim", "day": 2}, {"n": "Cova Papanikolis", "d": "SW Meganisi \u00b7 cova marina famosa", "lat": 38.628, "lng": 20.742, "kind": "swim", "day": 2}, {"n": "Gerolimionas", "d": "SW Kalamos \u00b7 cala protegida", "lat": 38.592, "lng": 20.903, "kind": "sleep", "day": 2}, {"n": "Atherinos Bay", "d": "SE Meganisi \u00b7 port i fondeig", "lat": 38.6585, "lng": 20.803, "kind": "sleep", "day": 3}, {"n": "Port de Kalamos", "d": "Poble i moll \u00b7 o afores", "lat": 38.623, "lng": 20.927, "kind": "sleep", "day": 4}, {"n": "Fteri Beach", "d": "Cala remota \u00b7 banyada/dinar", "lat": 38.408, "lng": 20.535, "kind": "swim", "day": 5}, {"n": "Asos", "d": "Poble pintoresc \u00b7 fondeig", "lat": 38.383, "lng": 20.55, "kind": "sleep", "day": 5}, {"n": "Vathy", "d": "Capital d'\u00cdtaca \u00b7 badia protegida", "lat": 38.371, "lng": 20.7165, "kind": "sleep", "day": 6}, {"n": "Mnimata Beach", "d": "Vora Vathy \u00b7 esmorzar/dinar", "lat": 38.366, "lng": 20.726, "kind": "lunch", "day": 7}, {"n": "Sami", "d": "\u00daltima nit a la base", "lat": 38.254, "lng": 20.649, "kind": "base", "day": 7}], "dayinfo": [{"day": 1, "date": "Dis 1 Ag", "title": "Sami \u2192 Marmakas", "note": "Sortida 14h. Pugem pel canal oest d'\u00cdtaca (Estret d'\u00cdtaca) fins al nord. Nit a la cala de Marmakas, vora Frikes."}, {"day": 2, "date": "Diu 2 Ag", "title": "Marmakas \u2192 Gerolimionas", "note": "Passem per l'illot d'Arkoudi, banyada a la Cova de Papanikolis (SW Meganisi), vorejant el sud de Meganisi, i a dormir a Gerolimionas (SW Kalamos)."}, {"day": 3, "date": "Dil 3 Ag", "title": "Gerolimionas \u2192 Atherinos", "note": "Naveguem pel sud de Kalamos i pel sud de Meganisi fins a Atherinos Bay (SE Meganisi)."}, {"day": 4, "date": "Dim 4 Ag", "title": "Atherinos \u2192 Kalamos port", "note": "Visitem Kalamos navegant pel nord de l'illa. Nit al port de Kalamos o als afores."}, {"day": 5, "date": "Dmc 5 Ag", "title": "Kalamos \u2192 Asos", "note": "Sortida 5h! Travessia llarga rodejant el nord d'\u00cdtaca i el cap de Fiskardo. Banyada a Fteri Beach i nit a Asos (Cefal\u00f2nia)."}, {"day": 6, "date": "Dij 6 Ag", "title": "Asos \u2192 Vathy", "note": "Pugem cap a Fiskardo i creuem al nord d'\u00cdtaca, voltejant l'illa fins a Vathy, la capital."}, {"day": 7, "date": "Div 7 Ag", "title": "Vathy \u2192 Sami", "note": "Esmorzar/dinar a Mnimata Beach (vora Vathy) i tornada per l'estret fins a Sami per l'\u00faltima nit."}]};
+
+const COL=['#6366f1','#10b981','#8b5cf6','#f59e0b','#ef4444','#0ea5e9','#ec4899'];
+const ICON={sleep:'🌙',lunch:'🍴',swim:'🏊',base:'⚓'};
+const isTouch = window.matchMedia('(max-width:760px)').matches;
+
+function renderPanel(){
+  let tot=0; Object.keys(DATA.routes).forEach(d=>tot+=DATA.routes[d].nm);
+  document.getElementById('tnm').textContent=Math.round(tot)+' nm';
+  document.getElementById('th').textContent='~'+(tot/7).toFixed(0)+'h';
+  const de=document.getElementById('days');
+  DATA.dayinfo.forEach(info=>{
+    const d=info.day,col=COL[d-1];
+    const stops=DATA.stops.filter(p=>p.day===d);
+    const km=DATA.routes[d];
+    const el=document.createElement('div');el.className='day';el.style.setProperty('--dc',col);el.dataset.day=d;
+    el.innerHTML='<div class="dh"><div class="dot" style="background:'+col+'"></div><span class="nm">Dia '+d+' · '+info.title+'</span><span class="dt">'+info.date+'</span></div>'+
+      '<div class="db"><div class="dm"><span class="mb">'+(km?km.nm+' nm':'')+'</span><span class="mb">'+(km?(km.nm/7).toFixed(1)+'h a 7kn':'')+'</span></div>'+
+      stops.map(s=>'<div class="stop"><span class="ico">'+(ICON[s.kind]||'📍')+'</span><span><span class="sn">'+s.n+'</span> <span class="sd">· '+s.d+'</span></span></div>').join('')+
+      '<div class="dn">'+info.note+'</div></div>';
+    el.querySelector('.dh').addEventListener('click',()=>onDay(d,el));
+    de.appendChild(el);
+  });
+}
+
+let map=null,lines={},act=null;
+function initMap(){
+  if(typeof L==='undefined'){ throw new Error('Leaflet KO'); }
+  map=L.map('map',{zoomControl:!isTouch}).setView([38.47,20.74],isTouch?9:10);
+  if(!isTouch) L.control.zoom({position:'bottomleft'}).addTo(map);
+  const TL={
+    sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'© Esri'}),
+    light:L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'© CartoDB'})
+  };
+  TL.sat.addTo(map);let nov=null;
+  window.setL=function(n){if(nov){map.removeLayer(nov);nov=null}Object.values(TL).forEach(l=>{try{map.removeLayer(l)}catch(e){}});if(n==='naut'){TL.light.addTo(map);nov=L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',{maxZoom:18,opacity:.9});nov.addTo(map)}else TL[n].addTo(map);document.querySelectorAll('.lb').forEach(b=>b.classList.remove('active'));document.getElementById('lb-'+n).classList.add('active')};
+  Object.keys(DATA.routes).forEach(d=>{lines[d]=L.polyline(DATA.routes[d].path,{color:COL[d-1],weight:isTouch?5:4.5,opacity:.9,lineJoin:'round',lineCap:'round'}).addTo(map)});
+  DATA.stops.forEach(p=>{
+    const col=p.kind==='base'?'#f97316':COL[p.day-1];const em=ICON[p.kind];const sz=isTouch?34:30;
+    const m=L.marker([p.lat,p.lng],{zIndexOffset:100,icon:L.divIcon({className:'dmk',html:'<div style="background:'+col+';width:'+sz+'px;height:'+sz+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:'+(sz/2)+'px;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">'+em+'</div>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]})});
+    m.bindPopup('<div class="pt" style="color:'+col+'">'+p.n+'</div><div class="pi">'+p.d+'</div>');m.addTo(map);
+  });
+  styleLines();fixSize();
+}
+function styleLines(){if(!map)return;Object.keys(DATA.routes).forEach(d=>{lines[d].setStyle({weight:(+d===act)?7:(isTouch?5:4.5),opacity:act===null?.9:((+d===act)?1:.15)})})}
+function fixSize(){if(map){const mp=document.getElementById('map');mp.style.height=window.innerHeight+'px';map.invalidateSize()}}
+
+function onDay(d,el){
+  act=act===d?null:d;
+  document.querySelectorAll('.day').forEach(x=>x.classList.remove('active'));
+  if(act!==null){
+    el.classList.add('active');
+    if(isTouch) document.getElementById('sb').classList.add('open');
+    if(map){const pad=isTouch?[30,30]:[70,70];try{map.flyToBounds(L.latLngBounds(DATA.routes[d].path),{padding:pad,duration:.9,maxZoom:13});}catch(e){}}
+  } else if(map){ map.flyTo([38.47,20.74],isTouch?9:10,{duration:.7}); }
+  styleLines();
+}
+
+function initSheet(){
+  const sb=document.getElementById('sb'),grab=document.getElementById('grab'),sbh=document.getElementById('sbh');
+  const toggle=()=>sb.classList.toggle('open');
+  grab.addEventListener('click',toggle);
+  sbh.addEventListener('click',()=>{if(isTouch)toggle()});
+  let sy=null,so=false;
+  const ts=e=>{sy=e.touches[0].clientY;so=sb.classList.contains('open')};
+  const tm=e=>{if(sy===null)return;const dy=e.touches[0].clientY-sy;if(so&&dy>60){sb.classList.remove('open');sy=null}else if(!so&&dy<-40){sb.classList.add('open');sy=null}};
+  const te=()=>{sy=null};
+  [grab,sbh].forEach(elx=>{elx.addEventListener('touchstart',ts,{passive:true});elx.addEventListener('touchmove',tm,{passive:true});elx.addEventListener('touchend',te)});
+}
+
+renderPanel();
+initSheet();
+try{ initMap(); }
+catch(err){
+  const mp=document.getElementById('map');
+  mp.innerHTML='<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;color:#6b7280;background:#eef2f7">'+
+    '<div style="font-size:40px;margin-bottom:12px">🛰️</div>'+
+    '<div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px">El mapa necessita internet</div>'+
+    '<div style="font-size:13px;line-height:1.6;max-width:300px">Activa el WiFi o les dades mòbils i torna a obrir la pàgina. La info dels dies (a sota) funciona sense connexió.</div></div>';
+  mp.style.height=window.innerHeight+'px';
+  if(isTouch) document.getElementById('sb').classList.add('open');
+}
+window.addEventListener('resize',fixSize);
+window.addEventListener('orientationchange',()=>setTimeout(fixSize,300));
+setTimeout(fixSize,300);
+
+</script>
+</body>
+</html>
